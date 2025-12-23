@@ -1,0 +1,35 @@
+version: '3.1'
+
+services:
+  # 1. The Odoo Server
+  odoo:
+    image: odoo:16.0
+    depends_on:
+      - db
+      - mock-api
+    ports:
+      - "8069:8069"
+    volumes:
+      # Mount the local modules folder into the Odoo container
+      - ./odoo_modules:/mnt/extra-addons
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      # Configure the module to talk to the mock-api container
+      - RS_GE_BASE_URL=http://mock-api:8000
+      - RS_GE_TIMEOUT=10
+
+  # 2. The Database
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+
+  # 3. The Mock API
+  mock-api:
+    build: ./mock_api
+    ports:
+      - "8000:8000"
